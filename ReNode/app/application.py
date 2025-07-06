@@ -331,7 +331,7 @@ def AppMain():
 	QtCore.QSettings.setPath(QtCore.QSettings.Format.IniFormat, QtCore.QSettings.Scope.SystemScope, ".")
 
 	trans = QtCore.QTranslator()
-	trans.load('.\data\qtbase_ru.qm')
+	trans.load('./data/qtbase_ru.qm')
 	app.installTranslator(trans)
 
 	QApplication.setStyle( "Fusion" )

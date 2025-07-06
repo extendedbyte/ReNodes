@@ -237,7 +237,7 @@ class NodeFactory:
 		from ReNode.ui.NodeGraphComponent import NodeGraphComponent
 		varMgr = NodeGraphComponent.refObject.variable_manager
 		dtv = 'value'
-		if re.findall('[\[\]\,]',type_name):
+		if re.findall(r'[\[\],]',type_name):
 			typeinfo = self.decomposeType(type_name)
 			type_name = typeinfo[1]
 			dtv = typeinfo[0]
@@ -288,9 +288,9 @@ class NodeFactory:
 				for v in val['inputs'].values():
 					portType = v['type']
 
-					if re.findall('[\[\]\,]',portType):
+					if re.findall(r'[\[\],]',portType):
 						portType = f'array[{portType}]'
-						typeinfo = re.findall('[\w\.\=\@\(\)\<\>\^]+',portType)
+						typeinfo = re.findall(r'[\w.=@()<>^]+',portType)
 						portType = typeinfo[1]
 
 					if portType.endswith("^"): portType = "object" #temp fix object colors
@@ -304,8 +304,8 @@ class NodeFactory:
 				for v in val['outputs'].values():
 					portType = v['type']
 
-					if re.findall('[\[\]\,]',portType):
-						typeinfo = re.findall('[\w\.\=\@\(\)\<\>\^]+',portType)
+					if re.findall(r'[\[\],]',portType):
+						typeinfo = re.findall(r'[\w.=@()<>^]+',portType)
 						portType = typeinfo[1]
 
 					if portType.endswith("^"): portType = "object" #temp fix object colors
@@ -715,8 +715,8 @@ class NodeFactory:
 
 	#TODO if changes in decomposeType,composeType -> forward decl in varmgr, varlib
 	def decomposeType(self,fulltypename):
-		if re.findall('[\[\]\,]',fulltypename):
-			typeinfo = re.findall('[\w\.\=\@\(\)\<\>\^]+',fulltypename)
+		if re.findall(r'[\[\],]',fulltypename):
+			typeinfo = re.findall(r'[\w.=@()<>^]+',fulltypename)
 			return typeinfo
 		else:
 			return ['value',fulltypename]
