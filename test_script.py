@@ -11,7 +11,7 @@ try:
 			self.resize(600,400)
 
 			self.mainLayout = QVBoxLayout(self)
-			#self.mainLayout.setMargin(10)
+			self.mainLayout.setContentsMargins(10, 10, 10, 10)
 
 			self.scroll = QScrollArea()
 			self.scroll.setWidgetResizable(True)
@@ -22,7 +22,7 @@ try:
 			self.scroll.setWidget(scrollContents)
 
 			self.textLayout = QVBoxLayout(scrollContents)
-			#self.textLayout.setMargin(10)
+			self.textLayout.setContentsMargins(10, 10, 10, 10)
 
 			for _ in arange(5):
 				text = GrowingTextEdit()

@@ -112,7 +112,7 @@ for line in data:
     num_sections = len(sections)
 
     if num_sections not in [4, 5, 6]:
-        print('Could\'t read line: ', line)
+        print('Couldn\'t read line: ', line)
         continue
 
     # Name always comes first

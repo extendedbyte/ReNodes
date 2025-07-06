@@ -114,7 +114,7 @@ def replace_in_expression(expression, args, arg_indexes, all_tokens):
             replacing_expression.append(new_token)
 
     if commands['##']:
-        # re-parse whole statement if concatenation occured
+        # re-parse whole statement if concatenation occurred
         # todo: any errors will report wrong coordinate
         replacing_expression = parse("".join([str(t) for t in replacing_expression])).tokens
 

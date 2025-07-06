@@ -26,18 +26,7 @@ class SplashScreenHandler(logging.Handler):
 			self.splash_screen.showMessage(message, QtCore.Qt.AlignmentFlag.AlignBottom, QtCore.Qt.GlobalColor.white)
 			QApplication.processEvents()
 
-"""class CustomSplashScreen(QtWidgets.QSplashScreen):
-	def __init__(self, pixmap,flags):
-		super().__init__(pixmap,flags)
-		self.gradient = QtGui.QLinearGradient(0, self.height() * 0.5, 0, self.height())
-		self.gradient.setColorAt(0, QtGui.QColor(0, 0, 0, 0))
-		self.gradient.setColorAt(1, QtGui.QColor(0, 0, 0, 255))
 
-	def paintEvent(self, event):
-		painter = QtGui.QPainter(self)
-		painter.drawPixmap(0, 0, self.pixmap())
-		painter.fillRect(0, int(self.height() * 0.5), self.width(), self.height(), self.gradient)
-		super(CustomSplashScreen,self).paintEvent(event)"""
 
 class Application:
 	
@@ -106,17 +95,6 @@ class Application:
 		logger.addHandler(stdout_hndl)
 
 		logger.info(f"Start loading {self.appName}")
-		# Test smooth 
-		"""splash.show()
-		opaqueness = 0.0
-		splash.setWindowOpacity(opaqueness)
-		step = 0.01
-		while opaqueness < 1:
-			splash.setWindowOpacity(opaqueness)
-			time.sleep(step) # Gradually appears
-			opaqueness+=step
-		time.sleep(1) # hold image on screen for a while
-		splash.close()"""
 		
 		Application.initializeConfig()
 
@@ -308,7 +286,6 @@ class ExceptionHandler:
 
 def AppMain():
 	from ReNode.app.LibGenerator import GenerateLibFromObj
-	global logger
 	arguments = sys.argv
 
 	if "-sign_lib" in arguments:

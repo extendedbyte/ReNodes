@@ -1,10 +1,11 @@
 import subprocess
 import sys
 import re
+import os
 
 pathRevisionFile = "ReNode/app/REVISION.py"
 pathVersionFile = "ReNode/app/VERSION.py"
-deployProjectPath = "C:/Users/Илья/Documents/Arma 3 - Other Profiles/User/missions/resdk_fork.vr/ReNode" #TODO
+deployProjectPath = os.environ.get('RENODE_DEPLOY_PATH', "C:/Users/Илья/Documents/Arma 3 - Other Profiles/User/missions/resdk_fork.vr/ReNode")
 print(f"Start builder. Args: {sys.argv}")
 
 # arguments inputed: major, minor
@@ -60,8 +61,6 @@ with open(pathRevisionFile, 'w') as f:
 	f.write("global_revision = \"" + str(revision) + "\"")
 
 if deploySource:
-	import os
-	import sys
 	import shutil
 	try:
 		data = """
