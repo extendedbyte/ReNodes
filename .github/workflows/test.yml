@@ -107,35 +107,35 @@ jobs:
         echo "Collecting performance metrics..."
         
         # Create metrics summary
-        python -c "
-import json
-import os
-import time
-from datetime import datetime
-
-metrics = {
-    'timestamp': datetime.now().isoformat(),
-    'workflow_run_id': '${{ github.run_id }}',
-    'commit_sha': '${{ github.sha }}',
-    'branch': '${{ github.ref_name }}',
-    'tests_completed': True,
-    'artifacts_created': []
-}
-
-# Check if performance results exist
-if os.path.exists('performance_results.json'):
-    with open('performance_results.json', 'r') as f:
-        performance_data = json.load(f)
-    metrics['performance_metrics'] = performance_data
-    metrics['artifacts_created'].append('performance_results.json')
-
-# Save metrics summary
-with open('tests/reports/metrics_summary.json', 'w') as f:
-    json.dump(metrics, f, indent=2)
-
-print('Metrics collection completed')
-print(f'Metrics summary saved to tests/reports/metrics_summary.json')
-"
+        python -c '
+        import json
+        import os
+        import time
+        from datetime import datetime
+        
+        metrics = {
+            "timestamp": datetime.now().isoformat(),
+            "workflow_run_id": "${{ github.run_id }}",
+            "commit_sha": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "tests_completed": True,
+            "artifacts_created": []
+        }
+        
+        # Check if performance results exist
+        if os.path.exists("performance_results.json"):
+            with open("performance_results.json", "r") as f:
+                performance_data = json.load(f)
+            metrics["performance_metrics"] = performance_data
+            metrics["artifacts_created"].append("performance_results.json")
+        
+        # Save metrics summary
+        with open("tests/reports/metrics_summary.json", "w") as f:
+            json.dump(metrics, f, indent=2)
+        
+        print("Metrics collection completed")
+        print("Metrics summary saved to tests/reports/metrics_summary.json")
+        '
         
     - name: Upload test results
       uses: actions/upload-artifact@v3
@@ -186,19 +186,19 @@ print(f'Metrics summary saved to tests/reports/metrics_summary.json')
           echo "✅ Performance metrics collected" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Performance Metrics" >> $GITHUB_STEP_SUMMARY
-          python -c "
-import json
-import sys
-try:
-    with open('performance_results.json', 'r') as f:
-        metrics = json.load(f)
-    for name, data in metrics.items():
-        if 'value' in data and 'threshold' in data:
-            status = '✅' if data['value'] <= (data['threshold'] or float('inf')) else '❌'
-            print(f'{status} **{name}**: {data[\"value\"]:.2f}{data[\"unit\"]} (threshold: {data[\"threshold\"]})')
-except Exception as e:
-    print(f'Error reading performance metrics: {e}')
-" >> $GITHUB_STEP_SUMMARY
+          python -c '
+          import json
+          import sys
+          try:
+              with open("performance_results.json", "r") as f:
+                  metrics = json.load(f)
+              for name, data in metrics.items():
+                  if "value" in data and "threshold" in data:
+                      status = "✅" if data["value"] <= (data["threshold"] or float("inf")) else "❌"
+                      print(f"{status} **{name}**: {data[\"value\"]:.2f}{data[\"unit\"]} (threshold: {data[\"threshold\"]})")
+          except Exception as e:
+              print(f"Error reading performance metrics: {e}")
+          ' >> $GITHUB_STEP_SUMMARY
         else
           echo "❌ Performance metrics not collected" >> $GITHUB_STEP_SUMMARY
         fi
@@ -291,23 +291,23 @@ except Exception as e:
     - name: Test external graph compilation
       run: |
         echo "Testing compilation of external graphs..."
-        python -c "
-import sys
-import json
-import os
-sys.path.insert(0, '.')
-
-# Test external graph compilation
-try:
-    from tests.test_graph_compilation import TestGraphCompilation
-    from tests.conftest import *
-    
-    # Run basic compilation test
-    print('External graph compilation test completed')
-except Exception as e:
-    print(f'External graph test failed: {e}')
-    sys.exit(1)
-"
+        python -c '
+        import sys
+        import json
+        import os
+        sys.path.insert(0, ".")
+        
+        # Test external graph compilation
+        try:
+            from tests.test_graph_compilation import TestGraphCompilation
+            from tests.conftest import *
+            
+            # Run basic compilation test
+            print("External graph compilation test completed")
+        except Exception as e:
+            print(f"External graph test failed: {e}")
+            sys.exit(1)
+        '
         
     - name: Upload external test results
       uses: actions/upload-artifact@v3
