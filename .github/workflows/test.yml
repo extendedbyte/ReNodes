@@ -49,26 +49,30 @@ jobs:
     - name: Prepare test environment
       run: |
         # Create necessary directories
-        mkdir -p tests/artifacts
-        mkdir -p tests/reports
+        if (!(Test-Path "tests\artifacts")) { New-Item -ItemType Directory -Path "tests\artifacts" -Force }
+        if (!(Test-Path "tests\reports")) { New-Item -ItemType Directory -Path "tests\reports" -Force }
         
         # Set environment variables for headless mode
-        echo "QT_QPA_PLATFORM=offscreen" >> $GITHUB_ENV
-        echo "DISPLAY=:99" >> $GITHUB_ENV
+        echo "QT_QPA_PLATFORM=offscreen" >> $env:GITHUB_ENV
+        echo "DISPLAY=:99" >> $env:GITHUB_ENV
+      shell: pwsh
         
     - name: Create mock files for testing
       run: |
         # Create minimal lib.obj for testing
-        echo "Mock library content for testing" > lib.obj
+        "Mock library content for testing" | Out-File -FilePath "lib.obj" -Encoding UTF8
         
         # Create lib_guid
-        echo "test-github-actions-guid" > lib_guid
+        "test-github-actions-guid" | Out-File -FilePath "lib_guid" -Encoding UTF8
         
         # Create data directory structure
-        mkdir -p data
+        if (!(Test-Path "data")) { New-Item -ItemType Directory -Path "data" -Force }
         
-        # Create minimal splash.png (base64 encoded 1x1 pixel PNG)
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 -d > data/splash.png
+        # Create minimal splash.png (1x1 pixel PNG from base64)
+        $base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+        $bytes = [System.Convert]::FromBase64String($base64)
+        [System.IO.File]::WriteAllBytes("data\splash.png", $bytes)
+      shell: pwsh
         
     - name: Run unit tests
       run: |
@@ -93,14 +97,32 @@ jobs:
     - name: Test application startup (headless)
       run: |
         echo "Testing application startup in headless mode..."
-        timeout 120 python main.py -noapp -nosplash -debug || echo "Startup test completed with exit code $?"
+        $job = Start-Job -ScriptBlock { python main.py -noapp -nosplash -debug }
+        if (Wait-Job $job -Timeout 120) {
+          Receive-Job $job
+          echo "Startup test completed"
+        } else {
+          Stop-Job $job
+          echo "Startup test timed out after 120 seconds"
+        }
+        Remove-Job $job -Force
       continue-on-error: true
+      shell: pwsh
       
     - name: Test graph compilation (if lib exists)
       run: |
         echo "Testing graph compilation..."
-        timeout 60 python main.py -prep_code -noapp -nosplash || echo "Compilation test completed with exit code $?"
+        $job = Start-Job -ScriptBlock { python main.py -prep_code -noapp -nosplash }
+        if (Wait-Job $job -Timeout 60) {
+          Receive-Job $job
+          echo "Compilation test completed"
+        } else {
+          Stop-Job $job
+          echo "Compilation test timed out after 60 seconds"
+        }
+        Remove-Job $job -Force
       continue-on-error: true
+      shell: pwsh
       
     - name: Collect metrics
       run: |
@@ -161,50 +183,51 @@ jobs:
     - name: Generate test summary
       if: always()
       run: |
-        echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+        "## Test Results Summary" >> $env:GITHUB_STEP_SUMMARY
+        "" >> $env:GITHUB_STEP_SUMMARY
         
-        if [ -f "tests/reports/junit.xml" ]; then
-          echo "✅ Unit tests completed" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ Unit tests failed or not completed" >> $GITHUB_STEP_SUMMARY
-        fi
+        if (Test-Path "tests\reports\junit.xml") {
+          "✅ Unit tests completed" >> $env:GITHUB_STEP_SUMMARY
+        } else {
+          "❌ Unit tests failed or not completed" >> $env:GITHUB_STEP_SUMMARY
+        }
         
-        if [ -f "tests/reports/performance_junit.xml" ]; then
-          echo "✅ Performance tests completed" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ Performance tests failed or not completed" >> $GITHUB_STEP_SUMMARY
-        fi
+        if (Test-Path "tests\reports\performance_junit.xml") {
+          "✅ Performance tests completed" >> $env:GITHUB_STEP_SUMMARY
+        } else {
+          "❌ Performance tests failed or not completed" >> $env:GITHUB_STEP_SUMMARY
+        }
         
-        if [ -f "tests/reports/integration_junit.xml" ]; then
-          echo "✅ Integration tests completed" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ Integration tests failed or not completed" >> $GITHUB_STEP_SUMMARY
-        fi
+        if (Test-Path "tests\reports\integration_junit.xml") {
+          "✅ Integration tests completed" >> $env:GITHUB_STEP_SUMMARY
+        } else {
+          "❌ Integration tests failed or not completed" >> $env:GITHUB_STEP_SUMMARY
+        }
         
-        if [ -f "performance_results.json" ]; then
-          echo "✅ Performance metrics collected" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Performance Metrics" >> $GITHUB_STEP_SUMMARY
-          python -c '
+        if (Test-Path "performance_results.json") {
+          "✅ Performance metrics collected" >> $env:GITHUB_STEP_SUMMARY
+          "" >> $env:GITHUB_STEP_SUMMARY
+          "### Performance Metrics" >> $env:GITHUB_STEP_SUMMARY
+          python -c "
           import json
           import sys
           try:
-              with open("performance_results.json", "r") as f:
+              with open('performance_results.json', 'r') as f:
                   metrics = json.load(f)
               for name, data in metrics.items():
-                  if "value" in data and "threshold" in data:
-                      status = "✅" if data["value"] <= (data["threshold"] or float("inf")) else "❌"
-                      print(f"{status} **{name}**: {data[\"value\"]:.2f}{data[\"unit\"]} (threshold: {data[\"threshold\"]})")
+                  if 'value' in data and 'threshold' in data:
+                      status = '✅' if data['value'] <= (data['threshold'] or float('inf')) else '❌'
+                      print(f'{status} **{name}**: {data[\"value\"]:.2f}{data[\"unit\"]} (threshold: {data[\"threshold\"]})')
           except Exception as e:
-              print(f"Error reading performance metrics: {e}")
-          ' >> $GITHUB_STEP_SUMMARY
-        else
-          echo "❌ Performance metrics not collected" >> $GITHUB_STEP_SUMMARY
-        fi
+              print(f'Error reading performance metrics: {e}')
+          " >> $env:GITHUB_STEP_SUMMARY
+        } else {
+          "❌ Performance metrics not collected" >> $env:GITHUB_STEP_SUMMARY
+        }
         
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "Artifacts have been uploaded and will be available for download." >> $GITHUB_STEP_SUMMARY
+        "" >> $env:GITHUB_STEP_SUMMARY
+        "Artifacts have been uploaded and will be available for download." >> $env:GITHUB_STEP_SUMMARY
+      shell: pwsh
         
     - name: Comment PR with results
       if: github.event_name == 'pull_request' && always()
@@ -283,10 +306,12 @@ jobs:
       run: |
         # In real implementation, this would download graphs from ReSDK_A3.vr
         # For now, we'll create mock external graphs
-        mkdir -p external_graphs
+        if (!(Test-Path "external_graphs")) { New-Item -ItemType Directory -Path "external_graphs" -Force }
         
         # Create mock graphs similar to ReSDK structure
-        echo '{"graph": {"info": {"name": "TestExternal", "classname": "ExternalTest", "type": "class"}, "variables": {"localvar": {}, "classvar": {}}}, "nodes": {"entry": {"class_": "internal.entry", "name": "External Entry", "pos": [0, 0]}}, "connections": []}' > external_graphs/test_external.json
+        $mockGraph = '{"graph": {"info": {"name": "TestExternal", "classname": "ExternalTest", "type": "class"}, "variables": {"localvar": {}, "classvar": {}}}, "nodes": {"entry": {"class_": "internal.entry", "name": "External Entry", "pos": [0, 0]}}, "connections": []}'
+        $mockGraph | Out-File -FilePath "external_graphs\test_external.json" -Encoding UTF8
+      shell: pwsh
         
     - name: Test external graph compilation
       run: |

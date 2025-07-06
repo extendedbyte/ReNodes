@@ -79,7 +79,7 @@ def install_dependencies():
     print("📦 Installing dependencies...")
     
     # Check if pip is available
-    pip_cmd = "python -m pip"
+    pip_cmd = "python3 -m pip"
     if sys.platform.startswith('win'):
         pip_cmd = "python -m pip"
     
@@ -112,19 +112,19 @@ def run_tests():
     test_suites = [
         {
             "name": "Unit Tests",
-            "cmd": 'python -m pytest tests/ -v --tb=short -m "unit or not slow" --junitxml=tests/reports/junit.xml',
+            "cmd": 'python3 -m pytest tests/ -v --tb=short -m "unit or not slow" --junitxml=tests/reports/junit.xml',
             "timeout": 300,  # 5 minutes
             "required": False
         },
         {
             "name": "Performance Tests",
-            "cmd": 'python -m pytest tests/test_performance.py -v --tb=short -m "slow" --junitxml=tests/reports/performance_junit.xml',
+            "cmd": 'python3 -m pytest tests/test_performance.py -v --tb=short -m "slow" --junitxml=tests/reports/performance_junit.xml',
             "timeout": 1800,  # 30 minutes
             "required": False
         },
         {
             "name": "Integration Tests",
-            "cmd": 'python -m pytest tests/test_graph_compilation.py tests/test_application.py -v --tb=short --junitxml=tests/reports/integration_junit.xml',
+            "cmd": 'python3 -m pytest tests/test_graph_compilation.py tests/test_application.py -v --tb=short --junitxml=tests/reports/integration_junit.xml',
             "timeout": 1200,  # 20 minutes
             "required": False
         }
@@ -147,7 +147,7 @@ def run_tests():
     
     # Test application startup
     startup_success, startup_output, startup_time = run_command(
-        "python main.py -noapp -nosplash -debug",
+        "python3 main.py -noapp -nosplash -debug",
         "Application Startup Test",
         timeout=120
     )
@@ -160,7 +160,7 @@ def run_tests():
     
     # Test compilation
     compile_success, compile_output, compile_time = run_command(
-        "python main.py -prep_code -noapp -nosplash",
+        "python3 main.py -prep_code -noapp -nosplash",
         "Graph Compilation Test",
         timeout=60
     )

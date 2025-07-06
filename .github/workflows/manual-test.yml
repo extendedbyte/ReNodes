@@ -45,11 +45,14 @@ jobs:
         
     - name: Prepare test environment
       run: |
-        mkdir -p tests/reports
-        echo "Mock library content" > lib.obj
-        echo "manual-test-guid" > lib_guid
-        mkdir -p data
-        echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" | base64 -d > data/splash.png
+        if (!(Test-Path "tests\reports")) { New-Item -ItemType Directory -Path "tests\reports" -Force }
+        "Mock library content" | Out-File -FilePath "lib.obj" -Encoding UTF8
+        "manual-test-guid" | Out-File -FilePath "lib_guid" -Encoding UTF8
+        if (!(Test-Path "data")) { New-Item -ItemType Directory -Path "data" -Force }
+        $base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="
+        $bytes = [System.Convert]::FromBase64String($base64)
+        [System.IO.File]::WriteAllBytes("data\splash.png", $bytes)
+      shell: pwsh
         
     - name: Run Unit Tests
       if: ${{ inputs.test_type == 'all' || inputs.test_type == 'unit' }}
@@ -75,8 +78,17 @@ jobs:
       if: ${{ inputs.test_type == 'all' || inputs.test_type == 'startup-only' }}
       run: |
         echo "Testing application startup..."
-        timeout 60 python main.py -noapp -nosplash -debug || echo "Startup test completed"
+        $job = Start-Job -ScriptBlock { python main.py -noapp -nosplash -debug }
+        if (Wait-Job $job -Timeout 60) {
+          Receive-Job $job
+          echo "Startup test completed"
+        } else {
+          Stop-Job $job
+          echo "Startup test timed out after 60 seconds"
+        }
+        Remove-Job $job -Force
       continue-on-error: true
+      shell: pwsh
       
     - name: Upload Results
       uses: actions/upload-artifact@v4
@@ -91,15 +103,16 @@ jobs:
     - name: Test Summary
       if: always()
       run: |
-        echo "## Manual Test Results" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Test Type:** ${{ inputs.test_type }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
+        "## Manual Test Results" >> $env:GITHUB_STEP_SUMMARY
+        "" >> $env:GITHUB_STEP_SUMMARY
+        "**Test Type:** ${{ inputs.test_type }}" >> $env:GITHUB_STEP_SUMMARY
+        "**Branch:** ${{ github.ref_name }}" >> $env:GITHUB_STEP_SUMMARY
+        "**Commit:** ${{ github.sha }}" >> $env:GITHUB_STEP_SUMMARY
+        "" >> $env:GITHUB_STEP_SUMMARY
         
-        if [ -f "tests/reports/manual_junit.xml" ]; then
-          echo "✅ Tests completed - check artifacts for details" >> $GITHUB_STEP_SUMMARY
-        else
-          echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
-        fi
+        if (Test-Path "tests\reports\manual_junit.xml") {
+          "✅ Tests completed - check artifacts for details" >> $env:GITHUB_STEP_SUMMARY
+        } else {
+          "⚠️ No test results found" >> $env:GITHUB_STEP_SUMMARY
+        }
+      shell: pwsh
