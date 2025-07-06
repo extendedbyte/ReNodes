@@ -1,0 +1,15 @@
+# Testing dependencies for ReNodes
+pytest>=7.0.0
+pytest-qt>=4.2.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+pytest-xvfb>=3.0.0  # For headless GUI testing on Linux
+coverage>=7.0.0
+
+# For mocking and testing
+unittest-mock>=1.0.1
+
+# Required for the application itself
+PyQt5>=5.15.0
+numpy>=1.20.0
+requests>=2.25.0
