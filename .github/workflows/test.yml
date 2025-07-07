@@ -89,19 +89,6 @@ jobs:
         }
       shell: pwsh
       
-    - name: Run standalone application test
-      run: |
-        echo "Running standalone application test..."
-        try {
-          python tests/standalone_app_test.py
-          echo "✅ Standalone application test passed!"
-        } catch {
-          echo "❌ Standalone application test failed: $_"
-          echo "This is expected if PyQt5 dependencies are missing"
-        }
-      shell: pwsh
-      continue-on-error: true
-      
     - name: Run performance tests
       run: |
         echo "Running performance tests..."

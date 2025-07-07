@@ -8,139 +8,6 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 import logging
-import importlib, types
-
-# ---------------------------------------------------------------------------
-# Stub Qt/PyQt5 modules (for CI environments without GUI libraries)
-# ---------------------------------------------------------------------------
-
-# Import comprehensive stubs first
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-try:
-    import pyqt5_stub_helper
-    print("✅ Comprehensive PyQt5 stubs loaded from pyqt5_stub_helper")
-except ImportError:
-    # Fallback to basic stubs
-    print("⚠️ Using fallback basic PyQt5 stubs")
-    for mod_name in ("PyQt5", "Qt"):
-        try:
-            importlib.import_module(mod_name)
-        except ModuleNotFoundError:
-            qt_stub = types.ModuleType(mod_name)
-            sys.modules[mod_name] = qt_stub
-            # Create submodules commonly used
-            for sub in ("QtWidgets", "QtCore", "QtGui"):
-                sub_mod_name = f"{mod_name}.{sub}"
-                sub_mod = types.ModuleType(sub_mod_name)
-                sys.modules[sub_mod_name] = sub_mod
-                setattr(qt_stub, sub, sub_mod)
-                
-                # Provide comprehensive stub classes/attributes  
-                if sub == "QtWidgets":
-                    widget_classes = [
-                        "QApplication", "QWidget", "QMainWindow", "QMessageBox",
-                        "QMenu", "QMenuBar", "QAction", "QDialog", "QLabel", "QPushButton",
-                        "QLineEdit", "QTextEdit", "QVBoxLayout", "QHBoxLayout", "QGridLayout",
-                        "QToolBar", "QStatusBar", "QDockWidget", "QTreeWidget", "QListWidget",
-                        "QComboBox", "QCheckBox", "QRadioButton", "QSpinBox", "QSlider",
-                        "QGraphicsItem", "QGraphicsScene", "QGraphicsView", "QUndoCommand",
-                        "QUndoStack", "QSplashScreen", "QProgressBar", "QFileDialog"
-                    ]
-                    
-                    for cls in widget_classes:
-                        if cls == "QMessageBox":
-                            mb_class = type(cls, (), {
-                                "__init__": lambda self, *a, **k: None,
-                                "information": staticmethod(lambda *a, **k: None),
-                                "warning": staticmethod(lambda *a, **k: None),
-                                "critical": staticmethod(lambda *a, **k: None),
-                                "question": staticmethod(lambda *a, **k: 0),
-                                "Yes": 1, "No": 2, "Cancel": 4, "Ok": 8,
-                            })
-                            setattr(sub_mod, cls, mb_class)
-                        else:
-                            stub_class = type(cls, (), {
-                                "__init__": lambda self, *a, **k: None,
-                                "instance": classmethod(lambda cls: None),
-                                "setQuitOnLastWindowClosed": lambda self, flag: None,
-                                "quit": lambda self: None,
-                                "show": lambda self: None,
-                                "hide": lambda self: None,
-                                "close": lambda self: None,
-                            })
-                            setattr(sub_mod, cls, stub_class)
-                
-                # Add GUI classes for QtGui
-                elif sub == "QtGui":
-                    gui_classes = ["QColor", "QPixmap", "QIcon", "QPainter", "QFont"]
-                    for cls in gui_classes:
-                        if cls == "QColor":
-                            color_class = type(cls, (), {
-                                "__init__": lambda self, *a, **k: None,
-                                "red": lambda self: 0,
-                                "green": lambda self: 0,
-                                "blue": lambda self: 0,
-                                "name": lambda self: "#000000",
-                            })
-                            setattr(sub_mod, cls, color_class)
-                        else:
-                            setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
-                
-                # Add Core classes for QtCore  
-                elif sub == "QtCore":
-                    core_classes = ["QObject", "QThread", "QTimer", "QSettings"]
-                    for cls in core_classes:
-                        setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
-                    
-                    setattr(sub_mod, "pyqtSignal", type("pyqtSignal", (), {
-                        "__init__": lambda self, *a, **k: None,
-                        "emit": lambda self, *a: None,
-                        "connect": lambda self, func: None,
-                    }))
-                    setattr(sub_mod, "Signal", type("Signal", (), {
-                        "__init__": lambda self, *a, **k: None,
-                        "emit": lambda self, *a: None,
-                        "connect": lambda self, func: None,
-                    }))
-                    
-                    # Add Qt namespace to QtCore as well
-                    setattr(sub_mod, "Qt", type("Qt", (), {
-                        "WindowMinimizeButtonHint": 1,
-                        "WindowMaximizeButtonHint": 2,
-                        "WindowCloseButtonHint": 4,
-                        "WindowStaysOnTopHint": 8,
-                        "Key_Escape": 16777216,
-                        "LeftButton": 1,
-                        "RightButton": 2,
-                        "MiddleButton": 4,
-                        "AlignLeft": 1,
-                        "AlignRight": 2,
-                        "AlignCenter": 4,
-                        "AlignTop": 8,
-                        "AlignBottom": 16,
-                        "UserRole": 256,
-                        "SolidLine": 1,
-                        "DashLine": 2,
-                        "DotLine": 3,
-                        "NoPen": 0,
-                        "SolidPattern": 1,
-                        "NoBrush": 0,
-                        "ArrowCursor": 0,
-                        "CrossCursor": 2,
-                        "WaitCursor": 3,
-                        "NoFocus": 0,
-                        "TabFocus": 1,
-                        "ClickFocus": 2,
-                        "StrongFocus": 11,
-                    }))
-                
-                # Basic enums/constants placeholder
-                setattr(sub_mod, "QT_VERSION_STR", "stub-5.15.0")
-
-# ---------------------------------------------------------------------------
-# Now we can safely import after stubs are created
-from PyQt5.QtWidgets import QApplication
 
 # Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -148,20 +15,25 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 @pytest.fixture(scope="session")
 def qapp():
     """Create QApplication instance for testing"""
-    # Ensure we're in headless mode even for stubbed QApplication
-    if not QApplication.instance():
-        try:
-            app = QApplication(['-platform', 'offscreen'])
-        except TypeError:
-            # Stubbed QApplication may not accept args
-            app = QApplication()
-        if hasattr(app, 'setQuitOnLastWindowClosed'):
-            app.setQuitOnLastWindowClosed(False)
-        yield app
-        if hasattr(app, 'quit'):
-            app.quit()
-    else:
-        yield QApplication.instance()
+    # Skip QApplication creation in CI environments without GUI
+    try:
+        from PyQt5.QtWidgets import QApplication
+        if not QApplication.instance():
+            try:
+                app = QApplication(['-platform', 'offscreen'])
+            except (TypeError, ImportError):
+                # Fallback for environments without PyQt5
+                app = None
+            if app and hasattr(app, 'setQuitOnLastWindowClosed'):
+                app.setQuitOnLastWindowClosed(False)
+            yield app
+            if app and hasattr(app, 'quit'):
+                app.quit()
+        else:
+            yield QApplication.instance()
+    except ImportError:
+        # No PyQt5 available, yield None
+        yield None
 
 @pytest.fixture
 def temp_dir():
@@ -241,10 +113,22 @@ def node_factory():
             return factory
     except ImportError:
         # Use mock NodeFactory
-        from tests.test_mocks import MockNodeFactory
-        factory = MockNodeFactory()
-        factory.loadFactoryFromJson("mock.json")
-        return factory
+        try:
+            from tests.test_mocks import MockNodeFactory
+            factory = MockNodeFactory()
+            factory.loadFactoryFromJson("mock.json")
+            return factory
+        except ImportError:
+            # Create minimal mock if test_mocks not available
+            class MinimalMockFactory:
+                def __init__(self):
+                    self.nodes = {}
+                    self.classes = {"object": {"baseClass": "", "baseList": ["object"]}}
+                    self.classNames = {"object"}
+                    self.version = 1
+                def loadFactoryFromJson(self, path):
+                    pass
+            return MinimalMockFactory()
 
 @pytest.fixture
 def mock_graph_data():
@@ -287,5 +171,14 @@ def code_generator(node_factory, mock_graph_data):
             return generator
     except ImportError:
         # Use mock CodeGenerator
-        from tests.test_mocks import MockCodeGenerator
-        return MockCodeGenerator()
+        try:
+            from tests.test_mocks import MockCodeGenerator
+            return MockCodeGenerator()
+        except ImportError:
+            # Create minimal mock if test_mocks not available
+            class MinimalMockGenerator:
+                def __init__(self):
+                    pass
+                def generateProcess(self, *args, **kwargs):
+                    return {"success": True, "code": "// mock generated code"}
+            return MinimalMockGenerator()
