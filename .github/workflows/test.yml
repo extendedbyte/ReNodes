@@ -125,7 +125,7 @@ jobs:
             print(f'Test execution failed: {e}')
             sys.exit(1)
         "
-      continue-on-error: true  # Don't fail the workflow if tests fail
+      # Fail the job if unit tests fail
       
     - name: Run performance tests
       run: |
@@ -150,7 +150,7 @@ jobs:
             print(f'Performance test failed: {e}')
             sys.exit(1)
         "
-      continue-on-error: true
+      # Fail the job if performance tests fail
       timeout-minutes: 30
       
     - name: Run integration tests
@@ -176,7 +176,7 @@ jobs:
             print(f'Integration test failed: {e}')
             sys.exit(1)
         "
-      continue-on-error: true
+      # Fail the job if integration tests fail
       timeout-minutes: 20
       
     - name: Test application startup (headless)
