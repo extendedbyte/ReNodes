@@ -78,37 +78,43 @@ jobs:
     - name: Run unit tests
       run: |
         echo "Running unit tests..."
-        if python -c "import pytest" 2>/dev/null; then
+        try {
+          python -c "import pytest"
           echo "Using pytest for unit tests"
           python -m pytest tests/ -v --tb=short --junitxml=tests/reports/junit.xml
-        else
+        } catch {
           echo "pytest not available, running basic tests"
           python tests/test_minimal.py
           python tests/test_basic_imports.py
-        fi
+        }
+      shell: pwsh
       
     - name: Run performance tests
       run: |
         echo "Running performance tests..."
-        if python -c "import pytest" 2>/dev/null; then
+        try {
+          python -c "import pytest"
           echo "Using pytest for performance tests"
           python -m pytest tests/test_performance.py -v --tb=short --junitxml=tests/reports/performance_junit.xml
-        else
+        } catch {
           echo "pytest not available, skipping performance tests"
           echo "Performance tests require pytest to run properly"
-        fi
+        }
+      shell: pwsh
       timeout-minutes: 30
       
     - name: Run integration tests
       run: |
         echo "Running integration tests..."
-        if python -c "import pytest" 2>/dev/null; then
+        try {
+          python -c "import pytest"
           echo "Using pytest for integration tests"
           python -m pytest tests/test_graph_compilation.py tests/test_application.py -v --tb=short --junitxml=tests/reports/integration_junit.xml
-        else
+        } catch {
           echo "pytest not available, skipping integration tests"
           echo "Integration tests require pytest to run properly"
-        fi
+        }
+      shell: pwsh
       timeout-minutes: 20
       
     - name: Test application startup (headless)
