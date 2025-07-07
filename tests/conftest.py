@@ -15,8 +15,6 @@ import importlib, types
 # ---------------------------------------------------------------------------
 
 # Import comprehensive stubs first
-import sys
-import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 try:
@@ -37,41 +35,44 @@ except ImportError:
                 sub_mod = types.ModuleType(sub_mod_name)
                 sys.modules[sub_mod_name] = sub_mod
                 setattr(qt_stub, sub, sub_mod)
-                # Provide comprehensive stub classes/attributes
-                widget_classes = [
-                    "QApplication", "QWidget", "QMainWindow", "QObject", "QMessageBox",
-                    "QMenu", "QMenuBar", "QAction", "QDialog", "QLabel", "QPushButton",
-                    "QLineEdit", "QTextEdit", "QVBoxLayout", "QHBoxLayout", "QGridLayout",
-                    "QToolBar", "QStatusBar", "QDockWidget", "QTreeWidget", "QListWidget",
-                    "QComboBox", "QCheckBox", "QRadioButton", "QSpinBox", "QSlider",
-                    "QGraphicsItem", "QGraphicsScene", "QGraphicsView", "QUndoCommand",
-                    "QUndoStack", "QSplashScreen", "QProgressBar", "QFileDialog"
-                ]
-                for cls in widget_classes:
-                    if cls == "QMessageBox":
-                        mb_class = type(cls, (), {
-                            "__init__": lambda self, *a, **k: None,
-                            "information": staticmethod(lambda *a, **k: None),
-                            "warning": staticmethod(lambda *a, **k: None),
-                            "critical": staticmethod(lambda *a, **k: None),
-                            "question": staticmethod(lambda *a, **k: 0),
-                            "Yes": 1, "No": 2, "Cancel": 4, "Ok": 8,
-                        })
-                        setattr(sub_mod, cls, mb_class)
-                    else:
-                        stub_class = type(cls, (), {
-                            "__init__": lambda self, *a, **k: None,
-                            "instance": classmethod(lambda cls: None),
-                            "setQuitOnLastWindowClosed": lambda self, flag: None,
-                            "quit": lambda self: None,
-                            "show": lambda self: None,
-                            "hide": lambda self: None,
-                            "close": lambda self: None,
-                        })
-                        setattr(sub_mod, cls, stub_class)
+                
+                # Provide comprehensive stub classes/attributes  
+                if sub == "QtWidgets":
+                    widget_classes = [
+                        "QApplication", "QWidget", "QMainWindow", "QMessageBox",
+                        "QMenu", "QMenuBar", "QAction", "QDialog", "QLabel", "QPushButton",
+                        "QLineEdit", "QTextEdit", "QVBoxLayout", "QHBoxLayout", "QGridLayout",
+                        "QToolBar", "QStatusBar", "QDockWidget", "QTreeWidget", "QListWidget",
+                        "QComboBox", "QCheckBox", "QRadioButton", "QSpinBox", "QSlider",
+                        "QGraphicsItem", "QGraphicsScene", "QGraphicsView", "QUndoCommand",
+                        "QUndoStack", "QSplashScreen", "QProgressBar", "QFileDialog"
+                    ]
+                    
+                    for cls in widget_classes:
+                        if cls == "QMessageBox":
+                            mb_class = type(cls, (), {
+                                "__init__": lambda self, *a, **k: None,
+                                "information": staticmethod(lambda *a, **k: None),
+                                "warning": staticmethod(lambda *a, **k: None),
+                                "critical": staticmethod(lambda *a, **k: None),
+                                "question": staticmethod(lambda *a, **k: 0),
+                                "Yes": 1, "No": 2, "Cancel": 4, "Ok": 8,
+                            })
+                            setattr(sub_mod, cls, mb_class)
+                        else:
+                            stub_class = type(cls, (), {
+                                "__init__": lambda self, *a, **k: None,
+                                "instance": classmethod(lambda cls: None),
+                                "setQuitOnLastWindowClosed": lambda self, flag: None,
+                                "quit": lambda self: None,
+                                "show": lambda self: None,
+                                "hide": lambda self: None,
+                                "close": lambda self: None,
+                            })
+                            setattr(sub_mod, cls, stub_class)
                 
                 # Add GUI classes for QtGui
-                if sub == "QtGui":
+                elif sub == "QtGui":
                     gui_classes = ["QColor", "QPixmap", "QIcon", "QPainter", "QFont"]
                     for cls in gui_classes:
                         if cls == "QColor":
@@ -87,16 +88,52 @@ except ImportError:
                             setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
                 
                 # Add Core classes for QtCore  
-                if sub == "QtCore":
+                elif sub == "QtCore":
+                    core_classes = ["QObject", "QThread", "QTimer", "QSettings"]
+                    for cls in core_classes:
+                        setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
+                    
                     setattr(sub_mod, "pyqtSignal", type("pyqtSignal", (), {
                         "__init__": lambda self, *a, **k: None,
                         "emit": lambda self, *a: None,
                         "connect": lambda self, func: None,
                     }))
-                    setattr(sub_mod, "QObject", type("QObject", (), {"__init__": lambda self, *a, **k: None}))
-                    setattr(sub_mod, "QThread", type("QThread", (), {"__init__": lambda self, *a, **k: None}))
-                    setattr(sub_mod, "QTimer", type("QTimer", (), {"__init__": lambda self, *a, **k: None}))
-                    setattr(sub_mod, "QSettings", type("QSettings", (), {"__init__": lambda self, *a, **k: None}))
+                    setattr(sub_mod, "Signal", type("Signal", (), {
+                        "__init__": lambda self, *a, **k: None,
+                        "emit": lambda self, *a: None,
+                        "connect": lambda self, func: None,
+                    }))
+                    
+                    # Add Qt namespace to QtCore as well
+                    setattr(sub_mod, "Qt", type("Qt", (), {
+                        "WindowMinimizeButtonHint": 1,
+                        "WindowMaximizeButtonHint": 2,
+                        "WindowCloseButtonHint": 4,
+                        "WindowStaysOnTopHint": 8,
+                        "Key_Escape": 16777216,
+                        "LeftButton": 1,
+                        "RightButton": 2,
+                        "MiddleButton": 4,
+                        "AlignLeft": 1,
+                        "AlignRight": 2,
+                        "AlignCenter": 4,
+                        "AlignTop": 8,
+                        "AlignBottom": 16,
+                        "UserRole": 256,
+                        "SolidLine": 1,
+                        "DashLine": 2,
+                        "DotLine": 3,
+                        "NoPen": 0,
+                        "SolidPattern": 1,
+                        "NoBrush": 0,
+                        "ArrowCursor": 0,
+                        "CrossCursor": 2,
+                        "WaitCursor": 3,
+                        "NoFocus": 0,
+                        "TabFocus": 1,
+                        "ClickFocus": 2,
+                        "StrongFocus": 11,
+                    }))
                 
                 # Basic enums/constants placeholder
                 setattr(sub_mod, "QT_VERSION_STR", "stub-5.15.0")
