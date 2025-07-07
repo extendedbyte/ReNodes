@@ -148,6 +148,19 @@ def create_pyqt5_stubs():
                         "ClickFocus": 2,
                         "StrongFocus": 11,
                         "WheelFocus": 15,
+                        # Graphics Item flags and types
+                        "UserType": 65536,
+                        "ItemIsMovable": 1,
+                        "ItemIsSelectable": 2,
+                        "ItemIsFocusable": 4,
+                        # Text flags
+                        "TextWordWrap": 1,
+                        "TextSingleLine": 256,
+                        # Dock widget areas
+                        "LeftDockWidgetArea": 1,
+                        "RightDockWidgetArea": 2,
+                        "TopDockWidgetArea": 4,
+                        "BottomDockWidgetArea": 8,
                     }))
                 
                 # GUI classes for QtGui
@@ -192,7 +205,7 @@ def create_pyqt5_stubs():
                         "QGraphicsProxyWidget", "QGraphicsTextItem", "QGraphicsPixmapItem",
                         "QGraphicsRectItem", "QGraphicsEllipseItem", "QGraphicsLineItem",
                         "QGraphicsPathItem", "QGraphicsPolygonItem", "QGraphicsSimpleTextItem",
-                        "QUndoCommand", "QUndoStack", "QOpenGLWidget"
+                        "QUndoCommand", "QUndoStack", "QOpenGLWidget", "QStyleOptionGraphicsItem"
                     ]
                     
                     for cls in widget_classes:

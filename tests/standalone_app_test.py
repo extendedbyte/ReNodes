@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run application tests with PyQt5 stubs"""
+"""Standalone application test with PyQt5 stubs - not a pytest test"""
 
 import sys
 import os
@@ -23,7 +23,7 @@ try:
     print(f"✅ Application imported successfully in {elapsed:.2f}s")
 except Exception as e:
     print(f"❌ Failed to import application: {e}")
-    sys.exit(1)
+    raise
 
 # Test basic functionality
 print("🔄 Testing application initialization...")
@@ -46,4 +46,4 @@ except Exception as e:
     print(f"❌ Application test failed: {e}")
     import traceback
     traceback.print_exc()
-    sys.exit(1)
+    raise

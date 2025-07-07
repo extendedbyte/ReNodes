@@ -13,29 +13,93 @@ import importlib, types
 # ---------------------------------------------------------------------------
 # Stub Qt/PyQt5 modules (for CI environments without GUI libraries)
 # ---------------------------------------------------------------------------
-for mod_name in ("PyQt5", "Qt"):
-    try:
-        importlib.import_module(mod_name)
-    except ModuleNotFoundError:
-        qt_stub = types.ModuleType(mod_name)
-        sys.modules[mod_name] = qt_stub
-        # Create submodules commonly used
-        for sub in ("QtWidgets", "QtCore", "QtGui"):
-            sub_mod_name = f"{mod_name}.{sub}"
-            sub_mod = types.ModuleType(sub_mod_name)
-            sys.modules[sub_mod_name] = sub_mod
-            setattr(qt_stub, sub, sub_mod)
-            # Provide minimal stub classes/attributes
-            for cls in ("QApplication", "QWidget", "QMainWindow", "QObject"):
-                stub_class = type(cls, (), {
-                    "__init__": lambda self, *a, **k: None,
-                    "instance": classmethod(lambda cls: None),
-                    "setQuitOnLastWindowClosed": lambda self, flag: None,
-                    "quit": lambda self: None
-                })
-                setattr(sub_mod, cls, stub_class)
-            # Basic enums/constants placeholder
-            setattr(sub_mod, "QT_VERSION_STR", "stub-0")
+
+# Import comprehensive stubs first
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+try:
+    import pyqt5_stub_helper
+    print("✅ Comprehensive PyQt5 stubs loaded from pyqt5_stub_helper")
+except ImportError:
+    # Fallback to basic stubs
+    print("⚠️ Using fallback basic PyQt5 stubs")
+    for mod_name in ("PyQt5", "Qt"):
+        try:
+            importlib.import_module(mod_name)
+        except ModuleNotFoundError:
+            qt_stub = types.ModuleType(mod_name)
+            sys.modules[mod_name] = qt_stub
+            # Create submodules commonly used
+            for sub in ("QtWidgets", "QtCore", "QtGui"):
+                sub_mod_name = f"{mod_name}.{sub}"
+                sub_mod = types.ModuleType(sub_mod_name)
+                sys.modules[sub_mod_name] = sub_mod
+                setattr(qt_stub, sub, sub_mod)
+                # Provide comprehensive stub classes/attributes
+                widget_classes = [
+                    "QApplication", "QWidget", "QMainWindow", "QObject", "QMessageBox",
+                    "QMenu", "QMenuBar", "QAction", "QDialog", "QLabel", "QPushButton",
+                    "QLineEdit", "QTextEdit", "QVBoxLayout", "QHBoxLayout", "QGridLayout",
+                    "QToolBar", "QStatusBar", "QDockWidget", "QTreeWidget", "QListWidget",
+                    "QComboBox", "QCheckBox", "QRadioButton", "QSpinBox", "QSlider",
+                    "QGraphicsItem", "QGraphicsScene", "QGraphicsView", "QUndoCommand",
+                    "QUndoStack", "QSplashScreen", "QProgressBar", "QFileDialog"
+                ]
+                for cls in widget_classes:
+                    if cls == "QMessageBox":
+                        mb_class = type(cls, (), {
+                            "__init__": lambda self, *a, **k: None,
+                            "information": staticmethod(lambda *a, **k: None),
+                            "warning": staticmethod(lambda *a, **k: None),
+                            "critical": staticmethod(lambda *a, **k: None),
+                            "question": staticmethod(lambda *a, **k: 0),
+                            "Yes": 1, "No": 2, "Cancel": 4, "Ok": 8,
+                        })
+                        setattr(sub_mod, cls, mb_class)
+                    else:
+                        stub_class = type(cls, (), {
+                            "__init__": lambda self, *a, **k: None,
+                            "instance": classmethod(lambda cls: None),
+                            "setQuitOnLastWindowClosed": lambda self, flag: None,
+                            "quit": lambda self: None,
+                            "show": lambda self: None,
+                            "hide": lambda self: None,
+                            "close": lambda self: None,
+                        })
+                        setattr(sub_mod, cls, stub_class)
+                
+                # Add GUI classes for QtGui
+                if sub == "QtGui":
+                    gui_classes = ["QColor", "QPixmap", "QIcon", "QPainter", "QFont"]
+                    for cls in gui_classes:
+                        if cls == "QColor":
+                            color_class = type(cls, (), {
+                                "__init__": lambda self, *a, **k: None,
+                                "red": lambda self: 0,
+                                "green": lambda self: 0,
+                                "blue": lambda self: 0,
+                                "name": lambda self: "#000000",
+                            })
+                            setattr(sub_mod, cls, color_class)
+                        else:
+                            setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
+                
+                # Add Core classes for QtCore  
+                if sub == "QtCore":
+                    setattr(sub_mod, "pyqtSignal", type("pyqtSignal", (), {
+                        "__init__": lambda self, *a, **k: None,
+                        "emit": lambda self, *a: None,
+                        "connect": lambda self, func: None,
+                    }))
+                    setattr(sub_mod, "QObject", type("QObject", (), {"__init__": lambda self, *a, **k: None}))
+                    setattr(sub_mod, "QThread", type("QThread", (), {"__init__": lambda self, *a, **k: None}))
+                    setattr(sub_mod, "QTimer", type("QTimer", (), {"__init__": lambda self, *a, **k: None}))
+                    setattr(sub_mod, "QSettings", type("QSettings", (), {"__init__": lambda self, *a, **k: None}))
+                
+                # Basic enums/constants placeholder
+                setattr(sub_mod, "QT_VERSION_STR", "stub-5.15.0")
 
 # ---------------------------------------------------------------------------
 # Now we can safely import after stubs are created
