@@ -923,7 +923,7 @@ class CodeGenerator:
                 # умная генерация локальной переменной выхода
                 if obj.getConnectionOutputs().get("Новое значение"):
                     oldCode = obj.code
-                    obj.code = "private @genvar.out.2 = @in.3;" + re.sub(f'@in\.3(?=\D|$)', f"@locvar.out.2", oldCode)
+                    obj.code = "private @genvar.out.2 = @in.3;" + re.sub(r'@in\.3(?=\D|$)', f"@locvar.out.2", oldCode)
             
             if clsName == "control.supercall":
                 rempart = "private @genvar.out.2 = "
@@ -1191,7 +1191,7 @@ class CodeGenerator:
                                     break
                         #replacers
                         node_code = node_code.replace(fullTextTemplate, replacerInfo)
-                        node_code = re.sub(f'@locvar\.{wordpart}\.{numpart}(?=\D|$)',lambda _:replacerInfo,node_code)
+                        node_code = re.sub(rf'@locvar\.{wordpart}\.{numpart}(?=\D|$)',lambda _:replacerInfo,node_code)
                         
                         # create var
                         gvObj = GeneratedVariable(lvar,node_id)
@@ -1302,7 +1302,7 @@ class CodeGenerator:
                             #self.warning(f"{node_id} не имеет специальных публичных данных")
                             continue
                         # нечего заменять в этом порте
-                        if not re.findall(f'@in\.{index+1}(?=\D|$)',node_code):
+                        if not re.findall(rf'@in\.{index+1}(?=\D|$)',node_code):
                             continue
                         isOptionalPort = not input_props.get('require_connection',True)
                         if hasRuntimePorts:
@@ -1311,7 +1311,7 @@ class CodeGenerator:
                             
                         inlineValue = obj_data['custom'].get(input_name,'NULL')
                         
-                        if re.findall(f'@in\.{index+1}(?=\D|$)',node_code) and inlineValue == "NULL" and not isOptionalPort:
+                        if re.findall(rf'@in\.{index+1}(?=\D|$)',node_code) and inlineValue == "NULL" and not isOptionalPort:
                             self.exception(CGPortRequiredConnectionException,source=obj,portname=input_name)
 
                         libOption = class_data['options'].get(input_name)
@@ -1358,11 +1358,11 @@ class CodeGenerator:
                             if isLambdaEntry and not isContextLambdaEntry:
                                 self.exception(CGEntrySelfObjectPortUnsupported,source=obj,portname=input_name,entry=entryObj)
                         _str_inlineValue = f"{inlineValue}"
-                        node_code = re.sub(f'@in\.{index+1}(?=\D|$)', lambda _:_str_inlineValue, node_code)
+                        node_code = re.sub(rf'@in\.{index+1}(?=\D|$)', lambda _:_str_inlineValue, node_code)
                         continue
 
                     # нечего заменять
-                    if not re.findall(f'@in\.{index+1}(?=\D|$)',node_code):
+                    if not re.findall(rf'@in\.{index+1}(?=\D|$)',node_code):
                         continue
 
                     inpId, portNameConn = inpId #unpack list
@@ -1407,7 +1407,7 @@ class CodeGenerator:
                             self.contextVariablesUsed.add(lvarObj.localName)
                         lvarObj.isUsed = True
                         _lvrObjLocNm = lvarObj.localName
-                        node_code = re.sub(f'@in\.{index+1}(?=\D|$)', lambda _:_lvrObjLocNm, node_code)
+                        node_code = re.sub(rf'@in\.{index+1}(?=\D|$)', lambda _:_lvrObjLocNm, node_code)
 
                     if inpObj.isReady:
                         #if re.findall(f'@in\.{index+1}(?=\D|$)',node_code):
@@ -1423,7 +1423,7 @@ class CodeGenerator:
                                 codeIn = inpObj.code
                             else:
                                 codeIn = f'BP_EXEC({inpObj._uid},{realIndex})\n /*bp-inp-exec*/ {inpObj.code}'
-                        node_code = re.sub(f'@in\.{index+1}(?=\D|$)',lambda _:codeIn,node_code) 
+                        node_code = re.sub(rf'@in\.{index+1}(?=\D|$)',lambda _:codeIn,node_code) 
 
                 # Переберите все выходы и замените их значения в коде
                 for index, (output_name, output_props) in enumerate(outputs_fromLib):
@@ -1435,7 +1435,7 @@ class CodeGenerator:
                             if not obj.getConnectionType("out",output_name) and obj.nodeClass != "control.supercall":
                                 self.exception(CGOutputPortTypeRequiredException,source=obj,portname=output_name)
                         
-                        node_code = re.sub(f'@out\.{index+1}(?=\D|$)',"",node_code) 
+                        node_code = re.sub(rf'@out\.{index+1}(?=\D|$)',"",node_code) 
                         continue
 
                     outId, portNameConn = outId #unpack list
@@ -1443,7 +1443,7 @@ class CodeGenerator:
                     outputObj = codeInfo[outId]
 
                     # нечего заменять
-                    if not re.findall(f'@out\.{index+1}(?=\D|$)',node_code):
+                    if not re.findall(rf'@out\.{index+1}(?=\D|$)',node_code):
                         continue
 
                     if outputObj.isReady:
@@ -1453,7 +1453,7 @@ class CodeGenerator:
                             codeOut = f"\nBP_PS({outputObj._uid}) {outputObj.code} BP_PE"  
                         else:
                             codeOut = f"BP_EXEC({obj._uid},{index})\n {outputObj.code}"
-                        node_code = re.sub(f"\@out\.{index+1}(?=\D|$)", lambda _:codeOut, node_code) 
+                        node_code = re.sub(rf"\@out\.{index+1}(?=\D|$)", lambda _:codeOut, node_code) 
 
                 # prepare if all replaced
                 if "@in." not in node_code and "@out." not in node_code:

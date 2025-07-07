@@ -8,8 +8,7 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 import logging
-import importlib, types, sys
-from PyQt5.QtWidgets import QApplication  # will be stub if PyQt5 was mocked
+import importlib, types
 
 # ---------------------------------------------------------------------------
 # Stub Qt/PyQt5 modules (for CI environments without GUI libraries)
@@ -28,11 +27,19 @@ for mod_name in ("PyQt5", "Qt"):
             setattr(qt_stub, sub, sub_mod)
             # Provide minimal stub classes/attributes
             for cls in ("QApplication", "QWidget", "QMainWindow", "QObject"):
-                setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
+                stub_class = type(cls, (), {
+                    "__init__": lambda self, *a, **k: None,
+                    "instance": classmethod(lambda cls: None),
+                    "setQuitOnLastWindowClosed": lambda self, flag: None,
+                    "quit": lambda self: None
+                })
+                setattr(sub_mod, cls, stub_class)
             # Basic enums/constants placeholder
             setattr(sub_mod, "QT_VERSION_STR", "stub-0")
 
 # ---------------------------------------------------------------------------
+# Now we can safely import after stubs are created
+from PyQt5.QtWidgets import QApplication
 
 # Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

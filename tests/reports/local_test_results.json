@@ -1,21 +1,21 @@
 {
-  "timestamp": "2025-07-07 06:43:14",
+  "timestamp": "2025-07-07 07:52:03",
   "test_results": {
     "Basic Import Tests": {
       "success": true,
-      "time": 0.02513432502746582,
+      "time": 0.025783300399780273,
       "output_preview": "INFO [test]: Test message\n⚠️ Could not import real NodeFactory: No module named 'Qt'\n✅ Using MockNodeFactory\n⚠️ Could not import real Application: No module named 'PyQt5'\n✅ Using MockApplication\n🎉 All"
     },
     "Application Startup": {
       "success": false,
-      "time": 0.02800154685974121,
+      "time": 0.028037309646606445,
       "output_preview": "Traceback (most recent call last):\n  File \"/workspace/main.py\", line 1, in <module>\n    from ReNode.app.application import AppMain\n  File \"/workspace/ReNode/app/application.py\", line 7, in <module>\n  "
     },
     "Graph Compilation": {
       "success": false,
-      "time": 0.026740550994873047,
+      "time": 0.02772974967956543,
       "output_preview": "Traceback (most recent call last):\n  File \"/workspace/main.py\", line 1, in <module>\n    from ReNode.app.application import AppMain\n  File \"/workspace/ReNode/app/application.py\", line 7, in <module>\n  "
     }
   },
-  "total_time": 0.08008074760437012
+  "total_time": 0.0819849967956543
 }
