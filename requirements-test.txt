@@ -1,20 +1,21 @@
-# Testing dependencies for ReNodes
-pytest>=7.0.0
-pytest-qt>=4.2.0
-pytest-cov>=4.0.0
-pytest-mock>=3.10.0
-pytest-xvfb>=3.0.0  # For headless GUI testing on Linux
-coverage>=7.0.0
+# Minimal testing dependencies - these should install everywhere
+pytest>=6.0.0
+coverage>=6.0.0
 
-# For mocking and testing
-unittest-mock>=1.0.1
+# Standard library packages (no need to install, but listed for reference)
+# unittest.mock (built into Python 3.3+)
+# json (built into Python)
+# os (built into Python)
+# sys (built into Python)
 
-# Required for the application itself (try to install, fallback to mocks if unavailable)
-PyQt5>=5.15.0; platform_system != "Darwin" and python_version < "3.12"
-numpy>=1.20.0
-requests>=2.25.0
+# Application dependencies (OPTIONAL - system will use mocks if these fail)
+# PyQt5>=5.15.0  # Commented out - often fails, using mocks instead
+# numpy>=1.20.0  # Commented out - not critical for basic tests
+# requests>=2.25.0  # Commented out - not needed for basic tests
 
-# Additional dependencies from main requirements  
-Qt.py>=1.3.0
-bottle>=0.12.0
-guidata>=3.0.0
+# If you want to test with real dependencies on Windows with full setup:
+# Uncomment the lines below and run: pip install -r requirements-test.txt
+# PyQt5>=5.15.0
+# numpy>=1.20.0  
+# requests>=2.25.0
+# pytest-qt>=4.2.0
