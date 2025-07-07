@@ -923,7 +923,7 @@ class CodeGenerator:
                 # умная генерация локальной переменной выхода
                 if obj.getConnectionOutputs().get("Новое значение"):
                     oldCode = obj.code
-                    obj.code = "private @genvar.out.2 = @in.3;" + re.sub(f'@in\.3(?=\D|$)', f"@locvar.out.2", oldCode)
+                    				obj.code = "private @genvar.out.2 = @in.3;" + re.sub(f'@in\.3(?=\D|$)', f"@locvar.out.2", oldCode)
             
             if clsName == "control.supercall":
                 rempart = "private @genvar.out.2 = "
