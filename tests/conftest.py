@@ -8,25 +8,31 @@ import tempfile
 import shutil
 from unittest.mock import patch, MagicMock
 import logging
+import importlib, types, sys
+from PyQt5.QtWidgets import QApplication  # will be stub if PyQt5 was mocked
 
-# Try to import PyQt5, use mocks if unavailable
-try:
-    from PyQt5.QtWidgets import QApplication
-    from PyQt5.QtCore import QTimer
-    PYQT5_AVAILABLE = True
-except ImportError:
-    PYQT5_AVAILABLE = False
-    # Create mock QApplication
-    class QApplication:
-        def __init__(self, args=None):
-            pass
-        @classmethod
-        def instance(cls):
-            return None
-        def setQuitOnLastWindowClosed(self, flag):
-            pass
-        def quit(self):
-            pass
+# ---------------------------------------------------------------------------
+# Stub Qt/PyQt5 modules (for CI environments without GUI libraries)
+# ---------------------------------------------------------------------------
+for mod_name in ("PyQt5", "Qt"):
+    try:
+        importlib.import_module(mod_name)
+    except ModuleNotFoundError:
+        qt_stub = types.ModuleType(mod_name)
+        sys.modules[mod_name] = qt_stub
+        # Create submodules commonly used
+        for sub in ("QtWidgets", "QtCore", "QtGui"):
+            sub_mod_name = f"{mod_name}.{sub}"
+            sub_mod = types.ModuleType(sub_mod_name)
+            sys.modules[sub_mod_name] = sub_mod
+            setattr(qt_stub, sub, sub_mod)
+            # Provide minimal stub classes/attributes
+            for cls in ("QApplication", "QWidget", "QMainWindow", "QObject"):
+                setattr(sub_mod, cls, type(cls, (), {"__init__": lambda self, *a, **k: None}))
+            # Basic enums/constants placeholder
+            setattr(sub_mod, "QT_VERSION_STR", "stub-0")
+
+# ---------------------------------------------------------------------------
 
 # Add project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -34,19 +40,20 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 @pytest.fixture(scope="session")
 def qapp():
     """Create QApplication instance for testing"""
-    if PYQT5_AVAILABLE:
-        # Ensure we're in headless mode
-        if not QApplication.instance():
+    # Ensure we're in headless mode even for stubbed QApplication
+    if not QApplication.instance():
+        try:
             app = QApplication(['-platform', 'offscreen'])
+        except TypeError:
+            # Stubbed QApplication may not accept args
+            app = QApplication()
+        if hasattr(app, 'setQuitOnLastWindowClosed'):
             app.setQuitOnLastWindowClosed(False)
-            yield app
-            app.quit()
-        else:
-            yield QApplication.instance()
-    else:
-        # Use mock QApplication
-        app = QApplication()
         yield app
+        if hasattr(app, 'quit'):
+            app.quit()
+    else:
+        yield QApplication.instance()
 
 @pytest.fixture
 def temp_dir():
